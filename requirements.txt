@@ -1,6 +1,8 @@
 
+
 streamlit==1.66.0
 tensorflow==2.20.0
-mediapipe==0.10.21
+mediapipe
 numpy
 pillow
+
