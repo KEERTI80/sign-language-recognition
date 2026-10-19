@@ -422,7 +422,6 @@ elif page == "📸 Recognize Gesture":
 
 # LIVE RECOGNITION PAGE
 
-
 elif page == "🎥 Live Recognition":
     st.markdown("## 🎥 Live Gesture Recognition")
     st.write("Allow camera access to recognize your hand gestures.")
@@ -431,6 +430,17 @@ elif page == "🎥 Live Recognition":
     import av
 
     class SignLanguageProcessor(VideoProcessorBase):
+        def __init__(self):
+            self.landmarker = vision.HandLandmarker.create_from_options(
+                vision.HandLandmarkerOptions(
+                    base_options=mp_python.BaseOptions(
+                        model_asset_path=HAND_MODEL_PATH
+                    ),
+                    running_mode=vision.RunningMode.IMAGE,
+                    num_hands=1
+                )
+            )
+
         def recv(self, frame):
             image = frame.to_ndarray(format="bgr24")
             image = cv2.flip(image, 1)
@@ -441,7 +451,7 @@ elif page == "🎥 Live Recognition":
                 data=rgb_image
             )
 
-            result = landmarker.detect(mp_image)
+            result = self.landmarker.detect(mp_image)
 
             if result.hand_landmarks:
                 hand = result.hand_landmarks[0]
@@ -467,8 +477,13 @@ elif page == "🎥 Live Recognition":
                 )
             else:
                 cv2.putText(
-                    image, "No hand detected", (20, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2
+                    image,
+                    "No hand detected",
+                    (20, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 0, 255),
+                    2
                 )
 
             return av.VideoFrame.from_ndarray(image, format="bgr24")
@@ -479,6 +494,9 @@ elif page == "🎥 Live Recognition":
         media_stream_constraints={"video": True, "audio": False},
         async_processing=True,
     )
+
+
+
 
 
 elif page == "📚 About Project":
