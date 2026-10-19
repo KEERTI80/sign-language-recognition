@@ -4,8 +4,7 @@ import os
 import mediapipe as mp
 import numpy as np
 import streamlit as st
-import cv2
-import time
+
 import tensorflow as tf
 
 from PIL import Image
@@ -138,7 +137,6 @@ with st.sidebar:
     [
         "🏠 Home",
         "📸 Recognize Gesture",
-        "🎥 Live Recognition",
         "📚 About Project"
     ],
     label_visibility="visible"
@@ -421,82 +419,6 @@ elif page == "📸 Recognize Gesture":
 # --------------------------------------------------
 
 # LIVE RECOGNITION PAGE
-
-elif page == "🎥 Live Recognition":
-    st.markdown("## 🎥 Live Gesture Recognition")
-    st.write("Allow camera access to recognize your hand gestures.")
-
-    from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
-    import av
-
-    class SignLanguageProcessor(VideoProcessorBase):
-        def __init__(self):
-            self.landmarker = vision.HandLandmarker.create_from_options(
-                vision.HandLandmarkerOptions(
-                    base_options=mp_python.BaseOptions(
-                        model_asset_path=HAND_MODEL_PATH
-                    ),
-                    running_mode=vision.RunningMode.IMAGE,
-                    num_hands=1
-                )
-            )
-
-        def recv(self, frame):
-            image = frame.to_ndarray(format="bgr24")
-            image = cv2.flip(image, 1)
-            rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-            mp_image = mp.Image(
-                image_format=mp.ImageFormat.SRGB,
-                data=rgb_image
-            )
-
-            result = self.landmarker.detect(mp_image)
-
-            if result.hand_landmarks:
-                hand = result.hand_landmarks[0]
-                landmarks = []
-
-                for point in hand:
-                    landmarks.extend([point.x, point.y, point.z])
-
-                features = np.array([landmarks], dtype=np.float32)
-                probabilities = model.predict(features, verbose=0)[0]
-                index = int(np.argmax(probabilities))
-                sign = labels[index]
-                confidence = float(probabilities[index])
-
-                cv2.putText(
-                    image,
-                    f"{sign}: {confidence * 100:.1f}%",
-                    (20, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 255, 0),
-                    2
-                )
-            else:
-                cv2.putText(
-                    image,
-                    "No hand detected",
-                    (20, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 0, 255),
-                    2
-                )
-
-            return av.VideoFrame.from_ndarray(image, format="bgr24")
-
-    webrtc_streamer(
-        key="sign-language-live",
-        video_processor_factory=SignLanguageProcessor,
-        media_stream_constraints={"video": True, "audio": False},
-        async_processing=True,
-    )
-
-
-
 
 
 elif page == "📚 About Project":
